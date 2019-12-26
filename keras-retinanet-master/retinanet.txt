@@ -1,0 +1,16 @@
+制作数据集与安装模型参考网站：https://blog.csdn.net/lufangbo/article/details/82888183
+
+imageAI下载：pip3 install https://github.com/OlafenwaMoses/ImageAI/releases/download/2.0.2/imageai-2.0.2-py3-none-any.whl
+
+
+
+训练参考--------
+制作好数据及并安装好模型后参考网站：https://cloud.tencent.com/developer/article/1418306 进行训练
+retinanet-train --batch-size 1 --epochs 20 --steps 500 --workers=0 csv train.csv class.csv --val-annotation test.csv
+retinanet-convert-model snapshots/resnet50_csv_54.h5 retinanet_inference.h5
+
+retinanet-train --weights snapshots/myyandiansai.h5 --batch-size 1 --epochs 60 --steps 1000 --workers=0 csv train.csv class.csv --val-annotation test.csv
+
+
+python -m keras_retinanet.bin.train --batch-size 1 --epochs 50 --steps 200 --workers=0 csv keras_retinanet/train.csv keras_retinanet/class.csv --val-annotations keras_retinanet/val.csv
+python -m keras_retinanet.bin.convert-model snapshots/resnet50_csv_35.h5 bottle_Segmentation2.h5
