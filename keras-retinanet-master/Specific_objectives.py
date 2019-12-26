@@ -23,22 +23,43 @@ def get_detectedImage(retinanet_model, image):
     new_size = (864, 648)
     image = cv2.resize(image, new_size, interpolation=cv2.INTER_LANCZOS4)
     draw = image.copy()
-    draw = cv2.cvtColor(draw, cv2.COLOR_BGR2RGB)
-    image = preprocess_image(image)
+    # draw = cv2.cvtColor(draw, cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = preprocess_image(image) #减去数据的统计平均值可以移除共同的部分，凸显个体差异
+    # cv2.imshow('image', image)
+    # while cv2.waitKey(25) != 27:
+    #     continue
     boxes, scores, labels = retinanet_model.predict_on_batch(np.expand_dims(image, axis=0))
+    i=0
+    fileObject = open('./BottleImage/SegmentationResult.txt', 'w')
     for box, score, label in zip(boxes[0], scores[0], labels[0]):
         if score < 0.9:
             break
         # if label == 0:
         #     break
+
+        unsealed_box = box.astype(int)#(x1, y1, x2, y2)
+        #识别结果boxes存放在txt文件中，供vs读取
+        fileObject.write(labels_to_names[label]+' ')
+        for j in range(4):
+            fileObject.write(str(unsealed_box[j]))
+            if j==3:
+                fileObject.write('\n')
+            else:
+                fileObject.write(' ')
+        # print(unsealed_box)
+        # unsealed_bottleimage = draw[unsealed_box[1]:unsealed_box[3], unsealed_box[0]:unsealed_box[2]]#高为y,宽为x？
+        # cv2.imwrite('./BottleImage/AfterSegmentation_BottleImage'+str(i)+'.bmp',unsealed_bottleimage)
+        # i=i+1
         color = label_color(label)
         b = box.astype(int)
         draw_box(draw, b, color=color)
         caption = "{} {:.3f}".format(labels_to_names[label], score)
         draw_caption(draw, b, caption)
+    fileObject.close()
     usedTime = time.time() - startTime
     print("检测这张图片用时%.2f秒"  %usedTime)
-    draw = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)
+    # draw = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)
 #    cv2.namedWindow("result", 0)
 #    cv2.resizeWindow("result", 500, 747)
 #    cv2.imshow('result', draw)
@@ -49,8 +70,8 @@ def get_detectedImage(retinanet_model, image):
 import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dirPath', type=str, help='directory path', default='./keras_retinanet/JPEGImages')
-    parser.add_argument('-s', '--suffix', type=str, default='000046.bmp')
+    parser.add_argument('-d', '--dirPath', type=str, help='directory path', default='./BottleImage')
+    parser.add_argument('-s', '--suffix', type=str, default='000001.bmp')
 #    parser.add_argument('-s', '--suffix', type=str, default='.png')
     parser.add_argument('-m', '--modelFilePath', type=str, default='./bottle_Segmentation2.h5')
     parser.add_argument('-o', '--out_mp4FilePath', type=str, default='fish_output.avi')
@@ -85,9 +106,9 @@ imageFilePath = os.path.join(dirPath, suffix)
 image = read_image_bgr(imageFilePath)
 # new_image=gammaTranform(1,1.5,image)
 result = get_detectedImage(retinanet_model,image)
-cv2.imshow('result', result)
-while cv2.waitKey(25)!=27:
-    continue
+# cv2.imshow('result', result)
+# while cv2.waitKey(25)!=27:
+#     continue
 
 # #多张图片
 # imgdir = './keras_retinanet/JPEGImages/'
